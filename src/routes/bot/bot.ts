@@ -1,35 +1,54 @@
-import { Bot as ViberBot, Events as BotEvents, Message } from "viber-bot";
-import { subscribed } from "../../controllers/bot";
+import { Router } from "express";
+import { getSubscriptions } from "../../controllers/bot/bot";
+import { User } from "../../models/user/entities/user.entity";
+import fetch from "node-fetch";
 
-const { Text, Video } = Message;
+export const botRouter = Router();
 
-export const bot = new ViberBot({
-  authToken: process.env.BOT_ACCOUNT_TOKEN,
-  name: "Deek bot",
-  avatar: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Katze_weiss.png",
+botRouter.post("/broadcast-message", async (req, res) => {
+  const users = (await getSubscriptions()).map(({ id }: User) => id);
+  const result = await fetch("https://chatapi.viber.com/pa/broadcast_message", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Viber-AUth-Token": process.env.BOT_ACCOUNT_TOKEN,
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: JSON.stringify({
+      url: process.env.EXPOSE_URL,
+      sender: {
+        name: "D",
+        avatar: "http://avatar.example.com",
+      },
+      min_api_version: 2,
+      type: "rich_media",
+      broadcast_list: users,
+      rich_media: {
+        Type: "rich_media",
+        BgColor: "#FF3333",
+        Buttons: [
+          {
+            ActionBody: "https://www.google.com",
+            ActionType: "open-url",
+            Text:
+              "Should get back my ID instead of replace_me_with_receiver_id",
+          },
+          {
+            ActionBody: "https://www.google.com",
+            ActionType: "open-url",
+            Text:
+              "Should get back my URL encoded ID instead of replace_me_with_url_encoded_receiver_id",
+          },
+          {
+            ActionBody: "https://www.google.com",
+            ActionType: "open-url",
+            Text:
+              "Should get back my name instead of replace_me_with_user_name",
+          },
+        ],
+      },
+    }),
+  });
+  console.log(result);
+  return res.json({ success: result });
 });
-
-bot.on(BotEvents.SUBSCRIBED, (response) => {
-  response.send(
-    new Text(
-      `Hi there ${response.userProfile.name}. I am ${bot.name}! Feel free to ask me anything.`
-    )
-  );
-  subscribed(response);
-});
-
-bot.on(BotEvents.MESSAGE_RECEIVED, (message, response) => {
-  console.log(response.userProfile);
-  response.send(new Text(`Message received.`));
-});
-
-export const initBot = async () => {
-  try {
-    await bot.setWebhook(`${process.env.EXPOSE_URL}/viber/webhook`);
-    console.log("Bot init");
-  } catch (error) {
-    console.log("Can not set webhook on following server. Is it running?");
-    console.error(error);
-    process.exit(1);
-  }
-};
