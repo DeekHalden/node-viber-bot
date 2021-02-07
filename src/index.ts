@@ -23,4 +23,4 @@ createConnection().then(async (connection) => {
   app.listen(port, async () => await bot.initBot());
 });
 
-module.exports = app;
+export default app;
