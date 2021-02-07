@@ -49,6 +49,5 @@ botRouter.post("/broadcast-message", async (req, res) => {
       },
     }),
   });
-  console.log(result);
   return res.json({ success: result });
 });
