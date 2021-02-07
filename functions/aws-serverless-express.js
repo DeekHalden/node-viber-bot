@@ -1,7 +1,7 @@
 /* example using https://github.com/awslabs/aws-serverless-express */
 import awsServerlessExpress from 'aws-serverless-express'
 import binaryMimeTypes from './utils/binaryMimeTypes'
-import expressApp from './build'
+import expressApp from './../src'
 
 // We need to define our function name for express routes to set the correct base path
 const functionName = 'aws-serverless-express'
